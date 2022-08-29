@@ -1,10 +1,19 @@
 #!/bin/bash
-
+NORMAL='\033[37m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+clear
 ShowError() {
-   echo  "[\033[31mError\033[37m] - $1"
+   echo -e "[ ${RED}Error${NORMAL} ] - $1"
+
 }
 ShowMessage() {
-   echo  "$1"
+   echo -e  "$1"
+}
+
+ShowInfo()
+{
+   echo -e "[ ${GREEN}$(date +%T)${NORMAL} ] - $1"
 }
 
 # Detect Debian users running the script with "sh" instead of bash
@@ -23,8 +32,33 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 
+PathToBackup=/etc/update-motd.d/backup/
 
+StartInstall()
+{
+    defaultMOTD=/etc/update-motd.d/
 
+    ShowInfo "Start of installation"
+# Check if the backup folder exists
+    if [ ! -d "$PathToBackup" ];then
+       ShowInfo "Create folder: $PathToBackup"
+       sudo mkdir $PathToBackup
+    fi
+# Make a backup copy of MOTD to the /$PathToBackup folder
+    ShowInfo "Backup started"
+    for file in $(ls $defaultMOTD); do
+        if [  "$defaultMOTD$file/" != "$PathToBackup" ];then
+            sudo mv  $defaultMOTD$file $PathToBackup
+            ShowInfo "File: $defaultMOTD$file ${GREEN}copied to$NORMAL $PathToBackup$file"
+
+        else
+            ShowError "File: $defaultMOTD$file - ${RED}skipped${NORMAL}  cannot copy a directory, '$defaultMOTD$file/', into itself, '$P>
+        fi
+
+    done
+
+    ShowInfo "Backup completed"
+}
 MakeChoice()
 {
     ShowMessage "Custom-MOTD has been installed!"
@@ -38,15 +72,25 @@ MakeChoice()
                 echo "$option: invalid selection."
                 read -p "Select an option [1]: " option
         done
+    case "$option" in
+        1|"")
+            StartInstall
+        ;;
+        0)
+            ShowMessage "Abort!"
+            exit 1;
+        ;;
+    esac
 }
 
 
 #Check installed
-PathAPP=/etc/
+PathAPP=/etc/Custom-Motd
 if [ -d "$PathAPP" ];then
 # Make choise
    MakeChoice
 else
 # Install
-   echo ''
+   StartInstall
 fi
+
