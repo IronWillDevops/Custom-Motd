@@ -2,8 +2,11 @@
 NORMAL='\033[37m'
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-
-ShowError() {
+PathAPP=/etc/Custom-Motd
+NameScript=00-Custom-Motd
+PathToBackup=/etc/update-motd.d/backup/
+defaultMOTD=/etc/update-motd.d/
+Sh\owError() {
    echo -e "[ ${RED}Error${NORMAL} ] - $1"
 }
 ShowMessage() {
@@ -13,6 +16,17 @@ ShowMessage() {
 ShowInfo() 
 {
    echo -e "[ ${GREEN}$(date +%T)${NORMAL} ] - $1"
+}
+
+CheckOrCreatedFolder()
+{
+ if [ ! -d "$1" ];then
+       ShowInfo "Create folder: $1"
+       sudo mkdir $1
+    else
+       ShowInfo "Folder: $1 - ${GREEN}exists${NORMAL}"
+    fi
+
 }
 
 # Detect Debian users running the script with "sh" instead of bash
@@ -28,22 +42,13 @@ read -N 999999 -t 0.001
 if [ "$(id -u)" != "0" ]; then
    ShowError "This script must not be run as root"
    exit 1
-fi 
+fi
 
-
-PathToBackup=/etc/update-motd.d/backup/
-
-StartInstall() 
-{ 
-    defaultMOTD=/etc/update-motd.d/
-
-    ShowInfo "Start of installation"
-# Check if the backup folder exists
-    if [ ! -d "$PathToBackup" ];then
-       ShowInfo "Create folder: $PathToBackup"
-       sudo mkdir $PathToBackup
-    fi
-# Make a backup copy of MOTD to the /$PathToBackup folder
+StartBackup() {
+    ShowInfo "Backup started"
+    # Check if the backup folder exists
+    CheckOrCreatedFolder "$PathToBackup"
+   # Make a backup copy of MOTD to the /$PathToBackup folder
     ShowInfo "Backup started"
     for file in $(ls $defaultMOTD); do
         if [  "$defaultMOTD$file/" != "$PathToBackup" ];then
@@ -55,9 +60,21 @@ StartInstall()
         fi
 
     done
-
     ShowInfo "Backup completed"
 }
+
+StartInstall() {
+    ShowInfo "Start of installation"
+    StartBackup
+
+  CheckOrCreatedFolder "$PathAPP"
+    sudo touch $PathAPP/$NameScript
+    ShowInfo "File: $PathAPP/$NameScript - ${GREEN}created${NORMAL}"
+    sudo chmod +x $PathAPP/$NameScript    
+    ShowInfo  "Setting execution rights"
+}
+
+
 MakeChoice()
 {
     ShowMessage "Custom-MOTD has been installed!"
@@ -73,7 +90,7 @@ MakeChoice()
 	done
     case "$option" in
         1|"")
-            StartInstall
+           StartInstall
         ;;
         0)
             ShowMessage "Abort!"
@@ -84,7 +101,6 @@ MakeChoice()
 
 
 #Check installed
-PathAPP=/etc/Custom-Motd
 if [ -d "$PathAPP" ];then
 # Make choise
    MakeChoice
@@ -92,3 +108,4 @@ else
 # Install
    StartInstall
 fi
+
