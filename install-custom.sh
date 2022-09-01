@@ -6,7 +6,7 @@ PathAPP=/etc/Custom-Motd
 NameScript=00-Custom-Motd
 PathToBackup=/etc/update-motd.d/backup/
 defaultMOTD=/etc/update-motd.d/
-Sh\owError() {
+ShowError() {
    echo -e "[ ${RED}Error${NORMAL} ] - $1"
 }
 ShowMessage() {
