@@ -2,8 +2,8 @@
 NORMAL='\033[37m'
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-PathAPP=/etc/Custom-Motd
-NameScript=00-Custom-Motd
+PathAPP=/etc/Custom-Motd/
+NameScript=99-custom-motd
 PathToBackup=/etc/update-motd.d/backup/
 defaultMOTD=/etc/update-motd.d/
 ShowError() {
@@ -44,6 +44,16 @@ if [ "$(id -u)" != "0" ]; then
    exit 1
 fi
 
+AddMotd() {
+cat << EOF >> $PathAPP/$NameScript
+#!/bin/sh
+clear
+echo "Hello"
+echo "The current working directory is: $PWD"
+echo "You are logged in as: $(whoami)"
+EOF
+}
+
 StartBackup() {
     ShowInfo "Backup started"
     # Check if the backup folder exists
@@ -68,10 +78,15 @@ StartInstall() {
     StartBackup
 
   CheckOrCreatedFolder "$PathAPP"
-    sudo touch $PathAPP/$NameScript
-    ShowInfo "File: $PathAPP/$NameScript - ${GREEN}created${NORMAL}"
-    sudo chmod +x $PathAPP/$NameScript    
+    sudo touch $PathAPP$NameScript
+    ShowInfo "File: $PathAPP$NameScript - ${GREEN}created${NORMAL}"
+    sudo chmod +x $PathAPP$NameScript    
     ShowInfo  "Setting execution rights"
+    sudo ln -s $PathAPP$NameScript $defaultMOTD$NameScript
+    ShowInfo "Link created"
+    AddMotd
+    sudo chmod +x  $defaultMOTD/$NameScript
+
 }
 
 
